@@ -1,25 +1,86 @@
 mod models;
-// pub use models::Produto;
+use std::env;
 use petgraph::graph::{Graph, NodeIndex};
 use petgraph::Undirected;
 use std::collections::HashMap;
 use megastore_graphs::models::Produto;
-use megastore_graphs::{connect_similar_products, search_products, search_by_name, search_by_category, recommended_products};
+use megastore_graphs::{connect_similar_products, search_by_name, search_by_category, recommended_products};
 
-// Função principal
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 3 {
+        eprintln!("Uso: cargo run -- <comando> <argumento>");
+        eprintln!("Comandos disponíveis: search-nome, search-categoria, recomendar");
+        return;
+    }
+
+    let comando = args[1].as_str();
+    let argumento = args[2].as_str();
+
+    let (grafo, nome_map, categoria_map) = criar_grafo_e_mapas();
+
+    match comando {
+        "search-nome" => {
+            let produtos = search_by_name(&grafo, &nome_map, argumento);
+            if produtos.is_empty() {
+                println!("Nenhum produto encontrado com o nome '{}'", argumento);
+            } else {
+                for p in produtos {
+                    println!("Nome: {}, Categoria: {}, Preço: R${}", p.nome, p.categoria, p.preco);
+                }
+            }
+        }
+        "search-categoria" => {
+            let produtos = search_by_category(&grafo, &categoria_map, argumento);
+            if produtos.is_empty() {
+                println!("Nenhum produto encontrado na categoria '{}'", argumento);
+            } else {
+                for p in produtos {
+                    println!("Nome: {}, Categoria: {}, Preço: R${}", p.nome, p.categoria, p.preco);
+                }
+            }
+        }
+        "recomendar" => {
+            // Aqui tenta converter argumento para u32 (id do produto)
+            match argumento.parse::<u32>() {
+                Ok(id) => {
+                    let recomendados = recommended_products(&grafo, id as usize);
+                    if recomendados.is_empty() {
+                        println!("Nenhuma recomendação encontrada para '{}'", argumento);
+                    } else {
+                        println!("Recomendações para '{}':", argumento);
+                        for p in recomendados {
+                            println!("→ Nome: {}, Categoria: {}, Preço: R${}", p.nome, p.categoria, p.preco);
+                        }
+                    }
+                }
+                Err(_) => eprintln!("ID do produto inválido para recomendação: {}", argumento),
+            }
+        }
+        _ => {
+            eprintln!("Comando desconhecido: {}", comando);
+        }
+    }
+}
+
+// Função para criar o grafo e mapas
+fn criar_grafo_e_mapas() -> (
+    Graph<Produto, (), Undirected>,
+    HashMap<String, Vec<NodeIndex>>,
+    HashMap<String, Vec<NodeIndex>>,
+) {
     let mut grafo: Graph<Produto, (), Undirected> = Graph::new_undirected();
     let mut mapa_nome: HashMap<String, Vec<NodeIndex>> = HashMap::new();
     let mut mapa_categoria: HashMap<String, Vec<NodeIndex>> = HashMap::new();
 
-    // Produtos base
     let produtos = vec![
         Produto { id: 1, nome: "Mouse Gamer".into(), categoria: "Periféricos".into(), preco: 199.90, popularidade: 25 },
         Produto { id: 2, nome: "Headset Gamer".into(), categoria: "Periféricos".into(), preco: 539.90, popularidade: 15 },
         Produto { id: 3, nome: "Teclado sem fio".into(), categoria: "Periféricos".into(), preco: 1299.90, popularidade: 40 },
         Produto { id: 4, nome: "Notebook Lenovo".into(), categoria: "Informática".into(), preco: 2999.90, popularidade: 60 },
         Produto { id: 5, nome: "Webcam HD".into(), categoria: "Periféricos".into(), preco: 250.00, popularidade: 22 },
-        Produto { id: 6, nome: "Monitor 24\"".into(), categoria: "Informática".into(), preco: 849.90, popularidade: 35 },
+        Produto { id: 6, nome: "Monitor 24 polegadas".into(), categoria: "Informática".into(), preco: 849.90, popularidade: 35 },
         Produto { id: 7, nome: "Cadeira Gamer".into(), categoria: "Móveis".into(), preco: 899.99, popularidade: 28 },
         Produto { id: 8, nome: "SSD 1TB".into(), categoria: "Armazenamento".into(), preco: 599.90, popularidade: 32 },
         Produto { id: 9, nome: "HD Externo 2TB".into(), categoria: "Armazenamento".into(), preco: 379.90, popularidade: 27 },
@@ -33,7 +94,6 @@ fn main() {
         Produto { id: 17, nome: "Adaptador USB-C".into(), categoria: "Acessórios".into(), preco: 39.90, popularidade: 10 },
     ];
 
-    // Inserção no grafo e mapas
     for produto in produtos {
         let node = grafo.add_node(produto);
         let nome = grafo[node].nome.clone();
@@ -43,24 +103,7 @@ fn main() {
         mapa_categoria.entry(categoria).or_default().push(node);
     }
 
-    // Conecta os produtos semelhantes após todos serem inseridos
     connect_similar_products(&mut grafo);
 
-    // Testes de funcionalidades
-    println!("\n--- Produtos no Grafo ---");
-    for node_index in grafo.node_indices() {
-        println!("{:?}", grafo[node_index]);
-    }
-
-    println!("\n--- Busca por termo 'gamer' ---");
-    search_products(&grafo, "gamer");
-
-    println!("\n--- Busca por nome exato ---");
-    search_by_name(&grafo, &mapa_nome, "Mouse Gamer");
-
-    println!("\n--- Busca por categoria ---");
-    search_by_category(&grafo, &mapa_categoria, "Periféricos");
-
-    println!("\n--- Recomendações para produto com ID 1 ---");
-    recommended_products(&grafo, 1);
+    (grafo, mapa_nome, mapa_categoria)
 }

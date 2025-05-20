@@ -1,8 +1,8 @@
 use crate::models::Produto;
-use petgraph::graph::{Graph, NodeIndex};
+use petgraph::graph::Graph;
 use petgraph::Undirected;
 
-pub fn recommended_products(grafo: &Graph<Produto, (), Undirected>, produto_id: usize) {
+pub fn recommended_products(grafo: &Graph<Produto, (), Undirected>, produto_id: usize) -> Vec<Produto> {
     if let Some((idx, produto_base)) = grafo
         .node_indices()
         .map(|i| (i, &grafo[i]))
@@ -25,16 +25,22 @@ pub fn recommended_products(grafo: &Graph<Produto, (), Undirected>, produto_id: 
 
         if candidatos.is_empty() {
             println!("Nenhum produto similar encontrado.");
+            return Vec::new();
         } else {
             println!("Produtos recomendados:");
             for (produto, peso) in candidatos.iter().take(5) {
                 println!("- {:?} [similaridade: {}]", produto, peso);
             }
+            return candidatos.iter().take(5).map(|(p, _)| (*p).clone()).collect();
         }
     } else {
         println!("Produto com id {} não encontrado", produto_id);
+        return Vec::new();
     }
 }
+
+
+
 
 pub fn calculate_similarity_weight(a: &Produto, b: &Produto) -> u32 {
     let mut peso = 0;
