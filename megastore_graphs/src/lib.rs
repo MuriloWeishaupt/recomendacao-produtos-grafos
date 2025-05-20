@@ -5,6 +5,7 @@ pub mod graph_utils;
 
 pub use recommendation::{
     recommended_products,
+    calculate_similarity_weight,
 };
 
 pub use search::{
@@ -17,3 +18,7 @@ pub use graph_utils::{
     connect_similar_products,
 
 };
+
+
+pub use models::Produto;
+

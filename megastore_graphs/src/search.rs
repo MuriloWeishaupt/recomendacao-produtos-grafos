@@ -20,22 +20,29 @@ pub fn search_products(grafo: &Graph<Produto, (), Undirected>, termo: &str) {
     }
 }
 
-pub fn search_by_name(grafo: &Graph<Produto, (), Undirected>, mapa: &HashMap<String, Vec<NodeIndex>>, nome: &str) {
+pub fn search_by_name(
+    grafo: &Graph<Produto, (), Undirected>,
+    mapa: &HashMap<String, Vec<NodeIndex>>,
+    nome: &str,
+) -> Vec<Produto> {
     if let Some(indices) = mapa.get(nome) {
-        for idx in indices {
-            println!("Produto encontrado: {:?}", grafo[*idx]);
-        }
+        indices.iter().map(|idx| grafo[*idx].clone()).collect()
     } else {
-        println!("Nenhum produto encontrado com nome: {}", nome);
+        Vec::new()
     }
 }
 
-pub fn search_by_category(grafo: &Graph<Produto, (), Undirected>, mapa: &HashMap<String, Vec<NodeIndex>>, categoria: &str) {
+
+
+pub fn search_by_category(
+    grafo: &Graph<Produto, (), Undirected>,
+    mapa: &HashMap<String, Vec<NodeIndex>>,
+    categoria: &str,
+) -> Vec<Produto> {
     if let Some(indices) = mapa.get(categoria) {
-        for idx in indices {
-            println!("Produto da categoria '{}': {:?}", categoria, grafo[*idx]);
-        }
+        indices.iter().map(|idx| grafo[*idx].clone()).collect()
     } else {
-        println!("Nenhum produto encontrado na categoria: {}", categoria);
+        Vec::new()
     }
 }
+
