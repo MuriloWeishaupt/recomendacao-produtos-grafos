@@ -1,0 +1,1 @@
+/workspaces/recomendacao-produtos-grafos/megastore_graphs/target/debug/megastore_graphs: /workspaces/recomendacao-produtos-grafos/megastore_graphs/src/main.rs /workspaces/recomendacao-produtos-grafos/megastore_graphs/src/models.rs
