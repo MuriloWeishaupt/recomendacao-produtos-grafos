@@ -15,13 +15,13 @@ fn main() {
     }
 
     let comando = args[1].as_str();
-    let argumento = args[2].as_str();
+    let argumento = args[2..].join(" ").to_lowercase();
 
     let (grafo, nome_map, categoria_map) = criar_grafo_e_mapas();
 
     match comando {
         "search-nome" => {
-            let produtos = search_by_name(&grafo, &nome_map, argumento);
+            let produtos = search_by_name(&grafo, &nome_map, &argumento);
             if produtos.is_empty() {
                 println!("Nenhum produto encontrado com o nome '{}'", argumento);
             } else {
@@ -31,7 +31,7 @@ fn main() {
             }
         }
         "search-categoria" => {
-            let produtos = search_by_category(&grafo, &categoria_map, argumento);
+            let produtos = search_by_category(&grafo, &categoria_map, &argumento);
             if produtos.is_empty() {
                 println!("Nenhum produto encontrado na categoria '{}'", argumento);
             } else {
@@ -95,8 +95,8 @@ fn criar_grafo_e_mapas() -> (
 
     for produto in produtos {
         let node = grafo.add_node(produto);
-        let nome = grafo[node].nome.clone();
-        let categoria = grafo[node].categoria.clone();
+        let nome = grafo[node].nome.clone().to_lowercase();
+        let categoria = grafo[node].categoria.clone().to_lowercase();
 
         mapa_nome.entry(nome).or_default().push(node);
         mapa_categoria.entry(categoria).or_default().push(node);
